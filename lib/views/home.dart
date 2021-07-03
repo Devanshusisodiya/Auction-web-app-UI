@@ -1,3 +1,5 @@
+import 'package:auction_ui3/views/login.dart';
+import 'package:auction_ui3/views/register.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -49,7 +51,11 @@ class _HomePageState extends State<HomePage> {
                         width: 500,
                         margin: EdgeInsets.only(left: 30),
                         child: Row(children: [
-                          Expanded(child: TextField(controller: _searchText)),
+                          Expanded(
+                              child: TextField(
+                            controller: _searchText,
+                            decoration: InputDecoration(hintText: 'Search...'),
+                          )),
                           IconButton(
                               onPressed: () {
                                 print(_searchText.text);
@@ -64,32 +70,46 @@ class _HomePageState extends State<HomePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton(
-                            onPressed: () {
-                              print('pressed register');
-                            },
-                            child: Text('Register',
-                                style: TextStyle(color: Colors.black))),
-                        TextButton(
-                            onPressed: () {
-                              print('pressed login');
-                            },
-                            child: Text('Login',
-                                style: TextStyle(color: Colors.black))),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => Register()));
+                                print('pressed register');
+                              },
+                              child: Text('Register',
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 20))),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 20),
+                          child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => Login()));
+                                print('pressed login');
+                              },
+                              child: Text('Login',
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 20))),
+                        ),
                       ],
                     )
                   ],
                 ),
               ),
               // THIS IS THE END OF NAVBAR AND START OF THE BODY
-              Container(
-                  margin: EdgeInsets.only(top: 20),
-                  width: 700,
-                  height: 400,
-                  color: Colors.white,
-                  child: Text('Just one word to describe us.\nSigma',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 80))),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text('Just one word,\nto describe us.\nSigma',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 80)),
+              ),
             ],
           ),
         ),
