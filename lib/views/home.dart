@@ -1,3 +1,4 @@
+import 'package:auction_ui3/views/listings.dart';
 import 'package:auction_ui3/views/login.dart';
 import 'package:auction_ui3/views/register.dart';
 import 'package:flutter/material.dart';
@@ -17,15 +18,15 @@ class _HomePageState extends State<HomePage> {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(80),
         child: AppBar(
-          backgroundColor: Colors.teal[100],
+          backgroundColor: Colors.teal[900],
           shadowColor: Colors.white,
           flexibleSpace: Center(
             child: Text(
               "KeiBai",
               style: TextStyle(
-                  color: Colors.black,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 30),
+                  fontSize: 50),
             ),
           ),
         ),
@@ -77,6 +78,20 @@ class _HomePageState extends State<HomePage> {
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
+                                        builder: (context) => Listings()));
+                                print('pressed listings');
+                              },
+                              child: Text('Listings',
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 20))),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
                                         builder: (context) => Register()));
                                 print('pressed register');
                               },
@@ -104,11 +119,25 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               // THIS IS THE END OF NAVBAR AND START OF THE BODY
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text('Just one word,\nto describe us.\nSigma',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 80)),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text('Just one word,\nto describe us.\nSigma',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 80)),
+                ),
+              ),
+              // FOOTER
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: 100,
+                color: Colors.teal[300],
+                child: Center(
+                  child: Text(
+                    'KeiBai Inc.',
+                    style: TextStyle(fontSize: 30, color: Colors.white),
+                  ),
+                ),
               ),
             ],
           ),

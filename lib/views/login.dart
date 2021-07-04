@@ -15,15 +15,15 @@ class _LoginState extends State<Login> {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(80),
         child: AppBar(
-          backgroundColor: Colors.teal[100],
+          backgroundColor: Colors.teal[900],
           shadowColor: Colors.white,
           flexibleSpace: Center(
             child: Text(
               "KeiBai",
               style: TextStyle(
-                  color: Colors.black,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 30),
+                  fontSize: 50),
             ),
           ),
         ),
@@ -61,7 +61,20 @@ class _LoginState extends State<Login> {
                     print('Login request sent');
                   },
                   child: Text('Login', style: TextStyle(fontSize: 20))),
-            )
+            ),
+            // FOOTER
+            Expanded(child: Text('')),
+            Container(
+              width: MediaQuery.of(context).size.width,
+              height: 100,
+              color: Colors.teal[300],
+              child: Center(
+                child: Text(
+                  'KeiBai Inc.',
+                  style: TextStyle(fontSize: 30, color: Colors.white),
+                ),
+              ),
+            ),
           ],
         ),
       ),
