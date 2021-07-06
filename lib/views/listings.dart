@@ -1,6 +1,9 @@
-import 'package:auction_ui3/views/login.dart';
-import 'package:auction_ui3/views/register.dart';
+import 'dart:convert';
+
+import 'package:auction_ui3/views/home.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_session/flutter_session.dart';
+import 'package:http/http.dart' as http;
 
 class Listings extends StatefulWidget {
   @override
@@ -8,6 +11,7 @@ class Listings extends StatefulWidget {
 }
 
 class _ListingsState extends State<Listings> {
+  bool loggedIn = true;
   TextEditingController _searchText = TextEditingController();
   //
   /// DUMMY DATA FOR TESTING
@@ -20,6 +24,15 @@ class _ListingsState extends State<Listings> {
       'closing': <dynamic, dynamic>{'details': 'closing details'},
     },
   ];
+
+  List<dynamic> respList = [];
+
+  Future getAssets() async {
+    var res = await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
+    var decode = jsonDecode(res.body);
+    print(decode);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,6 +55,14 @@ class _ListingsState extends State<Listings> {
       ),
       body: Column(
         children: <Widget>[
+          // TRYING TO MAINTIAN LOGIN STATE
+          FutureBuilder(
+              future: FlutterSession().get('token'),
+              builder: (context, snapshot) {
+                return snapshot.hasData
+                    ? Center(child: Text(snapshot.data.toString()))
+                    : Text('doesnt work');
+              }),
           Container(
             height: 60,
             color: Colors.white,
@@ -73,30 +94,16 @@ class _ListingsState extends State<Listings> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => Register()));
-                            print('pressed register');
-                          },
-                          child: Text('Register',
-                              style: TextStyle(
-                                  color: Colors.black, fontSize: 20))),
-                    ),
-                    Padding(
                       padding: const EdgeInsets.only(right: 20),
                       child: TextButton(
                           onPressed: () {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => Login()));
-                            print('pressed login');
+                                    builder: (context) => HomePage()));
+                            print('pressed home');
                           },
-                          child: Text('Login',
+                          child: Text('Home',
                               style: TextStyle(
                                   color: Colors.black, fontSize: 20))),
                     ),
@@ -111,51 +118,63 @@ class _ListingsState extends State<Listings> {
                 itemCount: testList.length,
                 itemBuilder: (context, index) {
                   // ASSET CARD
-                  return Card(
-                      elevation: 5,
-                      child: Column(children: [
-                        // ASSET NAME BOX
-                        SizedBox(
-                          height: 30,
-                          width: MediaQuery.of(context).size.width,
-                          child: Center(
-                              child:
-                                  Text('Asset Name' + testList[index]['name'])),
-                        ),
-                        // BID PRICE BOX
-                        SizedBox(
-                          height: 30,
-                          width: MediaQuery.of(context).size.width,
-                          child: Center(
-                              child: Text('Minimum Bid Price: ' +
-                                  testList[index]['minBid'])),
-                        ),
-                        // OPENING AND CLOSING DATE ROW-COLUMN
-                        SizedBox(
-                          height: 50,
-                          width: MediaQuery.of(context).size.width,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                  child: Center(
-                                      child: Column(
-                                children: [
-                                  Text('Opening Date'),
-                                  Text(testList[index]['opening']['details'])
-                                ],
-                              ))),
-                              Expanded(
-                                  child: Center(
-                                      child: Column(
-                                children: [
-                                  Text('Closing Date'),
-                                  Text(testList[index]['closing']['details'])
-                                ],
-                              ))),
-                            ],
+                  return GestureDetector(
+                    onTap: () {
+                      showAlertDialogBox(context);
+                    },
+                    child: Card(
+                        elevation: 5,
+                        child: Column(children: [
+                          // ASSET NAME BOX
+                          SizedBox(
+                            height: 30,
+                            width: MediaQuery.of(context).size.width,
+                            child: Center(
+                                child: Text(
+                                    'Asset Name' + testList[index]['name'])),
                           ),
-                        )
-                      ]));
+                          // BID PRICE BOX
+                          SizedBox(
+                            height: 30,
+                            width: MediaQuery.of(context).size.width,
+                            child: Center(
+                                child: Text('Minimum Bid Price: ' +
+                                    testList[index]['minBid'])),
+                          ),
+                          // OPENING AND CLOSING DATE ROW-COLUMN
+                          SizedBox(
+                            height: 50,
+                            width: MediaQuery.of(context).size.width,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                    child: Center(
+                                        child: Column(
+                                  children: [
+                                    Text('Opening Date'),
+                                    Text(testList[index]['opening']['details'])
+                                  ],
+                                ))),
+                                Expanded(
+                                    child: Center(
+                                        child: Column(
+                                  children: [
+                                    Text('Closing Date'),
+                                    Text(testList[index]['closing']['details'])
+                                  ],
+                                ))),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 20,
+                            width: MediaQuery.of(context).size.width,
+                            child: loggedIn
+                                ? Center(child: Text('Bidding Open'))
+                                : Center(child: Text('Bidding Closed')),
+                          )
+                        ])),
+                  );
                 }),
           ),
           // FOOTER
@@ -174,4 +193,25 @@ class _ListingsState extends State<Listings> {
       ),
     );
   }
+}
+
+showAlertDialogBox(BuildContext context) {
+  Widget submit = ElevatedButton(
+      onPressed: () {
+        Navigator.pop(context);
+        print(DateTime.now().toUtc());
+      },
+      child: Text("Submit"));
+
+  AlertDialog alert = AlertDialog(
+    title: Text('Enter your Bid'),
+    content: TextField(),
+    actions: [submit],
+  );
+
+  showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      });
 }

@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'package:auction_ui3/views/listings.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_session/flutter_session.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -8,6 +12,24 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  TextEditingController _username = TextEditingController();
+  TextEditingController _password = TextEditingController();
+
+  List<dynamic> users = [];
+
+  Future loginRequest(String username, String password) async {
+    var res = await http.post(Uri.parse('http://localhost:8000/api/login'),
+        headers: <String, String>{'Content-Type': 'application/json'},
+        body: jsonEncode(
+            <String, String>{'username': username, 'password': password}));
+
+    if (res.statusCode == 203) {
+      await FlutterSession().set('token', _username.text);
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => Listings()));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,6 +63,7 @@ class _LoginState extends State<Login> {
               child: Padding(
                 padding: EdgeInsets.only(top: 20),
                 child: TextField(
+                  controller: _username,
                   decoration: InputDecoration(hintText: 'Username'),
                 ),
               ),
@@ -50,6 +73,7 @@ class _LoginState extends State<Login> {
               child: Padding(
                 padding: EdgeInsets.only(top: 20),
                 child: TextField(
+                  controller: _password,
                   decoration: InputDecoration(hintText: 'Password'),
                 ),
               ),
@@ -59,6 +83,7 @@ class _LoginState extends State<Login> {
               child: ElevatedButton(
                   onPressed: () {
                     print('Login request sent');
+                    loginRequest(_username.text, _password.text);
                   },
                   child: Text('Login', style: TextStyle(fontSize: 20))),
             ),
