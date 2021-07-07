@@ -2,14 +2,35 @@ import 'package:auction_ui3/views/listings.dart';
 import 'package:auction_ui3/views/login.dart';
 import 'package:auction_ui3/views/register.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
+  // final user;
+  const HomePage({Key? key}) : super(key: key);
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  TextEditingController _searchText = TextEditingController();
+  bool globalStatus = false;
+
+  Future checkStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var localStatus = prefs.getBool('status');
+    print('$localStatus');
+    if (localStatus == true) {
+      setState(() {
+        globalStatus = true;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    checkStatus();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,87 +59,9 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              //
-              ///
-              // THIS IS THE COMPLETE NAVBAR
-              Container(
-                height: 60,
-                color: Colors.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // THIS IS THE LEFT SIDE OF THE NAVBAR
-                    Container(
-                        width: 500,
-                        margin: EdgeInsets.only(left: 30),
-                        child: Row(children: [
-                          Expanded(
-                              child: TextField(
-                            controller: _searchText,
-                            decoration: InputDecoration(hintText: 'Search...'),
-                          )),
-                          IconButton(
-                              onPressed: () {
-                                print(_searchText.text);
-                                _searchText.clear();
-                              },
-                              icon: Icon(
-                                Icons.search,
-                                color: Colors.black,
-                              ))
-                        ])),
-                    // THIS IS THE RIGHT SIDE OF NAVBAR
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 10),
-                          child: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Listings()));
-                                print('pressed listings');
-                              },
-                              child: Text('Listings',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 20))),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 10),
-                          child: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Register()));
-                                print('pressed register');
-                              },
-                              child: Text('Register',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 20))),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 20),
-                          child: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Login()));
-                                print('pressed login');
-                              },
-                              child: Text('Login',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 20))),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
+              Navbar(
+                status: globalStatus,
               ),
-              // THIS IS THE END OF NAVBAR AND START OF THE BODY
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -142,6 +85,137 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// NAVBAR CLASS
+class Navbar extends StatefulWidget {
+  final bool status;
+  const Navbar({Key? key, required this.status}) : super(key: key);
+
+  @override
+  _NavbarState createState() => _NavbarState();
+}
+
+class _NavbarState extends State<Navbar> {
+  TextEditingController _searchText = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 60,
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // THIS IS THE LEFT SIDE OF THE NAVBAR
+          Container(
+              width: 500,
+              margin: EdgeInsets.only(left: 30),
+              child: Row(children: [
+                Expanded(
+                    child: TextField(
+                  controller: _searchText,
+                  decoration: InputDecoration(hintText: 'Search...'),
+                )),
+                IconButton(
+                    onPressed: () {
+                      print(_searchText.text);
+                      _searchText.clear();
+                    },
+                    icon: Icon(
+                      Icons.search,
+                      color: Colors.black,
+                    ))
+              ])),
+          // THIS IS THE RIGHT SIDE OF NAVBAR
+          widget.status
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Listings()));
+                            print('pressed listings');
+                          },
+                          child: Text('Listings',
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 20))),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 20),
+                      child: TextButton(
+                          onPressed: () async {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => HomePage()));
+                            print('pressed logout');
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            prefs.setBool('status', false);
+                          },
+                          child: Text("Logout",
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 20))),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Listings()));
+                            print('pressed listings');
+                          },
+                          child: Text('Listings',
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 20))),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Register()));
+                            print('pressed register');
+                          },
+                          child: Text('Register',
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 20))),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 20),
+                      child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Login()));
+                            print('pressed login');
+                          },
+                          child: Text('Login',
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 20))),
+                    ),
+                  ],
+                )
+        ],
       ),
     );
   }

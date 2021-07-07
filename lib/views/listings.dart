@@ -1,9 +1,9 @@
 import 'dart:convert';
-
 import 'package:auction_ui3/views/home.dart';
+import 'package:auction_ui3/views/login.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_session/flutter_session.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Listings extends StatefulWidget {
   @override
@@ -25,12 +25,31 @@ class _ListingsState extends State<Listings> {
     },
   ];
 
-  List<dynamic> respList = [];
+  // List<dynamic> respList = [];
 
-  Future getAssets() async {
-    var res = await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
-    var decode = jsonDecode(res.body);
-    print(decode);
+  // Future getAssets() async {
+  //   var res = await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
+  //   var decode = jsonDecode(res.body);
+  //   print(decode);
+  // }
+
+  bool globalStatus = false;
+
+  Future checkStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var localStatus = prefs.getBool('status');
+    print('$localStatus');
+    if (localStatus == true) {
+      setState(() {
+        globalStatus = true;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    checkStatus();
+    super.initState();
   }
 
   @override
@@ -55,14 +74,6 @@ class _ListingsState extends State<Listings> {
       ),
       body: Column(
         children: <Widget>[
-          // TRYING TO MAINTIAN LOGIN STATE
-          FutureBuilder(
-              future: FlutterSession().get('token'),
-              builder: (context, snapshot) {
-                return snapshot.hasData
-                    ? Center(child: Text(snapshot.data.toString()))
-                    : Text('doesnt work');
-              }),
           Container(
             height: 60,
             color: Colors.white,
@@ -120,7 +131,9 @@ class _ListingsState extends State<Listings> {
                   // ASSET CARD
                   return GestureDetector(
                     onTap: () {
-                      showAlertDialogBox(context);
+                      globalStatus
+                          ? showAlertDialogBoxUser(context)
+                          : showAlertDialogBoxGuest(context);
                     },
                     child: Card(
                         elevation: 5,
@@ -169,9 +182,7 @@ class _ListingsState extends State<Listings> {
                           SizedBox(
                             height: 20,
                             width: MediaQuery.of(context).size.width,
-                            child: loggedIn
-                                ? Center(child: Text('Bidding Open'))
-                                : Center(child: Text('Bidding Closed')),
+                            child: Center(child: Text('Bidding Status')),
                           )
                         ])),
                   );
@@ -195,7 +206,28 @@ class _ListingsState extends State<Listings> {
   }
 }
 
-showAlertDialogBox(BuildContext context) {
+showAlertDialogBoxGuest(BuildContext context) {
+  Widget submit = ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => Login()));
+      },
+      child: Text("Go to Login"));
+
+  AlertDialog alert = AlertDialog(
+    title: Text('Login Required'),
+    content: Text('Please login in order to start bidding'),
+    actions: [submit],
+  );
+
+  showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      });
+}
+
+showAlertDialogBoxUser(BuildContext context) {
   Widget submit = ElevatedButton(
       onPressed: () {
         Navigator.pop(context);
