@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:auction_ui3/views/home.dart';
-import 'package:auction_ui3/views/listings.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,22 +15,29 @@ class _LoginState extends State<Login> {
   TextEditingController _username = TextEditingController();
   TextEditingController _password = TextEditingController();
 
-  String userch = 'user';
-  String passch = 'pass';
+  Future loginRequest(String username, String password) async {
+    var res = await http.post(Uri.parse('http://localhost:8000/api/login'),
+        headers: <String, String>{'Content-Type': 'application/json'},
+        body: jsonEncode(<String, String>{
+          'username': _username.text,
+          'password': _password.text
+        }));
 
-  // List<dynamic> users = [];
+    var decode = jsonDecode(res.body);
+    print(decode);
 
-  // Future loginRequest(String username, String password) async {
-  //   var res = await http.post(Uri.parse('http://localhost:8000/api/login'),
-  //       headers: <String, String>{'Content-Type': 'application/json'},
-  //       body: jsonEncode(
-  //           <String, String>{'username': username, 'password': password}));
+    if (res.statusCode == 203) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setBool('status', true);
+      prefs.setString('user', _username.text);
 
-  //   if (res.statusCode == 203) {
-  //     Navigator.push(
-  //         context, MaterialPageRoute(builder: (context) => Listings()));
-  //   }
-  // }
+      //  REROUTING TO HOMEPAGE
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => HomePage()));
+    } else {
+      showAlertDialogBox(context, _username, _password);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,17 +92,7 @@ class _LoginState extends State<Login> {
               child: ElevatedButton(
                   onPressed: () async {
                     print('Login request sent');
-                    if (_username.text == userch && _password.text == passch) {
-                      SharedPreferences prefs =
-                          await SharedPreferences.getInstance();
-                      prefs.setBool('status', true);
-                      prefs.setString('user', _username.text);
-
-                      //  REROUTING TO HOMEPAGE
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => HomePage()));
-                    }
-                    // loginRequest(_username.text, _password.text);
+                    loginRequest(_username.text, _password.text);
                   },
                   child: Text('Login', style: TextStyle(fontSize: 20))),
             ),
@@ -108,9 +104,7 @@ class _LoginState extends State<Login> {
                     //  REROUTING TO HOMEPAGE
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) => HomePage()));
-                  }
-                  // loginRequest(_username.text, _password.text);
-                  ,
+                  },
                   child:
                       Text('Login as Guest', style: TextStyle(fontSize: 20))),
             ),
@@ -132,4 +126,27 @@ class _LoginState extends State<Login> {
       ),
     );
   }
+}
+
+showAlertDialogBox(BuildContext context, TextEditingController user,
+    TextEditingController pass) {
+  Widget submit = TextButton(
+      onPressed: () {
+        Navigator.pop(context);
+        user.clear();
+        pass.clear();
+      },
+      child: Text("Try Again"));
+
+  AlertDialog alert = AlertDialog(
+    title: Text('Invalid Details'),
+    content: Text('Login details entered are invalid.'),
+    actions: [submit],
+  );
+
+  showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      });
 }

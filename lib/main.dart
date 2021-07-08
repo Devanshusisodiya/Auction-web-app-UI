@@ -13,6 +13,6 @@ Future<void> main() async {
     theme: ThemeData(
       primarySwatch: Colors.teal,
     ),
-    home: (status == null) ? Login() : HomePage(),
+    home: (status == null || status == false) ? Login() : HomePage(),
   ));
 }

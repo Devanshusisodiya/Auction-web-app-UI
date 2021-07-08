@@ -11,29 +11,24 @@ class Listings extends StatefulWidget {
 }
 
 class _ListingsState extends State<Listings> {
-  bool loggedIn = true;
   TextEditingController _searchText = TextEditingController();
-  //
-  /// DUMMY DATA FOR TESTING
-  //
-  List<Map<dynamic, dynamic>> testList = [
-    {
-      'name': 'Asset 1',
-      'minBid': '1200',
-      'opening': <dynamic, dynamic>{'details': 'opening details'},
-      'closing': <dynamic, dynamic>{'details': 'closing details'},
-    },
-  ];
+  // NECESSARY DUMMY DATA
+  List<String> testList = ['DUMMY DATA'];
 
-  // List<dynamic> respList = [];
-
-  // Future getAssets() async {
-  //   var res = await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
-  //   var decode = jsonDecode(res.body);
-  //   print(decode);
-  // }
-
+  List<dynamic> respList = [];
   bool globalStatus = false;
+
+  Future getAssets() async {
+    Future.delayed(Duration(seconds: 2), () async {
+      var res =
+          await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
+      var decode = jsonDecode(res.body);
+      setState(() {
+        respList = decode;
+      });
+      print(respList);
+    });
+  }
 
   Future checkStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -46,8 +41,19 @@ class _ListingsState extends State<Listings> {
     }
   }
 
+  bool bidStatusCalculater(String close) {
+    var closeParsed = DateTime.parse(close);
+    var dateTimeNow = DateTime.now();
+    if (dateTimeNow.isAfter(closeParsed)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   @override
   void initState() {
+    getAssets();
     checkStatus();
     super.initState();
   }
@@ -62,12 +68,17 @@ class _ListingsState extends State<Listings> {
           backgroundColor: Colors.teal[900],
           shadowColor: Colors.white,
           flexibleSpace: Center(
-            child: Text(
-              "KeiBai",
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 50),
+            child: GestureDetector(
+              onTap: () {
+                getAssets();
+              },
+              child: Text(
+                "KeiBai",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 50),
+              ),
             ),
           ),
         ),
@@ -126,66 +137,80 @@ class _ListingsState extends State<Listings> {
           Expanded(
             child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: testList.length,
+                itemCount: respList.isEmpty ? testList.length : respList.length,
                 itemBuilder: (context, index) {
                   // ASSET CARD
-                  return GestureDetector(
-                    onTap: () {
-                      globalStatus
-                          ? showAlertDialogBoxUser(context)
-                          : showAlertDialogBoxGuest(context);
-                    },
-                    child: Card(
-                        elevation: 5,
-                        child: Column(children: [
-                          // ASSET NAME BOX
-                          SizedBox(
-                            height: 30,
-                            width: MediaQuery.of(context).size.width,
-                            child: Center(
-                                child: Text(
-                                    'Asset Name' + testList[index]['name'])),
-                          ),
-                          // BID PRICE BOX
-                          SizedBox(
-                            height: 30,
-                            width: MediaQuery.of(context).size.width,
-                            child: Center(
-                                child: Text('Minimum Bid Price: ' +
-                                    testList[index]['minBid'])),
-                          ),
-                          // OPENING AND CLOSING DATE ROW-COLUMN
-                          SizedBox(
-                            height: 50,
-                            width: MediaQuery.of(context).size.width,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                    child: Center(
-                                        child: Column(
-                                  children: [
-                                    Text('Opening Date'),
-                                    Text(testList[index]['opening']['details'])
-                                  ],
-                                ))),
-                                Expanded(
-                                    child: Center(
-                                        child: Column(
-                                  children: [
-                                    Text('Closing Date'),
-                                    Text(testList[index]['closing']['details'])
-                                  ],
-                                ))),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            height: 20,
-                            width: MediaQuery.of(context).size.width,
-                            child: Center(child: Text('Bidding Status')),
-                          )
-                        ])),
-                  );
+                  return (respList.isEmpty)
+                      ? Center(child: CircularProgressIndicator())
+                      : GestureDetector(
+                          onTap: () {
+                            globalStatus
+                                ? showAlertDialogBoxUser(
+                                    context, respList[index]['status'])
+                                : showAlertDialogBoxGuest(context);
+                          },
+                          child: Card(
+                              elevation: 5,
+                              child: Column(children: [
+                                // ASSET NAME BOX
+                                SizedBox(
+                                  height: 30,
+                                  width: MediaQuery.of(context).size.width,
+                                  child: Center(
+                                      child: Text('Asset Name: ' +
+                                          respList[index]['name'])),
+                                ),
+                                // BID PRICE BOX
+                                SizedBox(
+                                  height: 30,
+                                  width: MediaQuery.of(context).size.width,
+                                  child: Center(
+                                      child: Text('Minimum Bid Price: ' +
+                                          respList[index]['minimumBid']
+                                              .toString())),
+                                ),
+                                // OPENING AND CLOSING DATE ROW-COLUMN
+                                SizedBox(
+                                  height: 50,
+                                  width: MediaQuery.of(context).size.width,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                          child: Center(
+                                              child: Column(
+                                        children: [
+                                          Text('Opening Date'),
+                                          Text(respList[index]['openingDate']
+                                                  ['day'] +
+                                              ' ' +
+                                              respList[index]['openingDate']
+                                                  ['time'])
+                                        ],
+                                      ))),
+                                      Expanded(
+                                          child: Center(
+                                              child: Column(
+                                        children: [
+                                          Text('Closing Date'),
+                                          Text(respList[index]['closingDate']
+                                                  ['day'] +
+                                              ' ' +
+                                              respList[index]['closingDate']
+                                                  ['time'])
+                                        ],
+                                      ))),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 20,
+                                  width: MediaQuery.of(context).size.width,
+                                  child: respList[index]['status']
+                                      ? Center(child: Text('Bidding Open'))
+                                      : Center(child: Text('Bidding Closed')),
+                                )
+                              ])),
+                        );
                 }),
           ),
           // FOOTER
@@ -227,17 +252,22 @@ showAlertDialogBoxGuest(BuildContext context) {
       });
 }
 
-showAlertDialogBoxUser(BuildContext context) {
-  Widget submit = ElevatedButton(
+showAlertDialogBoxUser(BuildContext context, bool status) {
+  Widget submit = TextButton(
       onPressed: () {
-        Navigator.pop(context);
-        print(DateTime.now().toUtc());
+        if (status) {
+          // POST A REQUEST TO PLACE BID
+          print('bid placed');
+        } else {
+          Navigator.pop(context);
+        }
       },
-      child: Text("Submit"));
+      child: status ? Text("Submit") : Text("OK"));
 
   AlertDialog alert = AlertDialog(
-    title: Text('Enter your Bid'),
-    content: TextField(),
+    title: status ? Text('Enter your Bid') : Text('Closed'),
+    content:
+        status ? TextField() : Text('Bidding for this item is now closed.'),
     actions: [submit],
   );
 
