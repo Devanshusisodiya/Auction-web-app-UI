@@ -58,14 +58,16 @@ class _ListingsState extends State<Listings> {
           decode[i]['closingDate']['time']);
       if (assetOpeningValidity.isBefore(dateTimeNow) &&
           assetClosingValidity.isAfter(dateTimeNow)) {
-        var statusRes = await http.patch(
-            Uri.parse('http://localhost:8000/api/patch-status'),
-            headers: <String, String>{'Content-Type': 'application/json'},
-            body: jsonEncode(<String, dynamic>{
-              'assetName': decode[i]['name'],
-              'status': true,
-            }));
-        print(statusRes.statusCode);
+        if (decode[i]['status'] == false) {
+          var statusRes = await http.patch(
+              Uri.parse('http://localhost:8000/api/patch-status'),
+              headers: <String, String>{'Content-Type': 'application/json'},
+              body: jsonEncode(<String, dynamic>{
+                'assetName': decode[i]['name'],
+                'status': true,
+              }));
+          print(statusRes.statusCode);
+        }
       }
     }
   }

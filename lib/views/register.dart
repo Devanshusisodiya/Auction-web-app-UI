@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:auction_ui3/views/login.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);
@@ -8,6 +11,9 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  TextEditingController _username = TextEditingController();
+  TextEditingController _password = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,6 +47,7 @@ class _RegisterState extends State<Register> {
               child: Padding(
                 padding: EdgeInsets.only(top: 20),
                 child: TextField(
+                  controller: _username,
                   decoration: InputDecoration(hintText: 'Username'),
                 ),
               ),
@@ -50,6 +57,8 @@ class _RegisterState extends State<Register> {
               child: Padding(
                 padding: EdgeInsets.only(top: 20),
                 child: TextField(
+                  obscureText: true,
+                  controller: _password,
                   decoration: InputDecoration(hintText: 'Password'),
                 ),
               ),
@@ -57,8 +66,27 @@ class _RegisterState extends State<Register> {
             Padding(
               padding: const EdgeInsets.all(25),
               child: ElevatedButton(
-                  onPressed: () {
-                    print('register request sent');
+                  onPressed: () async {
+                    var res = await http.post(
+                        Uri.parse('http://localhost:8000/api/reg/user'),
+                        headers: <String, String>{
+                          'Content-Type': 'application/json'
+                        },
+                        body: jsonEncode(<String, dynamic>{
+                          'username': _username.text,
+                          'password': _password.text
+                        }));
+                    if (res.statusCode == 201) {
+                      _username.clear();
+                      _password.clear();
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => Login()));
+                      print('register request sent');
+                    } else {
+                      _username.clear();
+                      _password.clear();
+                      print(res.body);
+                    }
                   },
                   child: Text('Register', style: TextStyle(fontSize: 20))),
             ),
