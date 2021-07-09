@@ -14,11 +14,11 @@ class _ListingsState extends State<Listings> {
   TextEditingController _searchText = TextEditingController();
   // NECESSARY DUMMY DATA
   List<String> testList = ['DUMMY DATA'];
-
+  //
   List<dynamic> respList = [];
   bool globalStatus = false;
 
-  Future getAssets() async {
+  void getAssets() {
     Future.delayed(Duration(seconds: 2), () async {
       var res =
           await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
@@ -41,18 +41,38 @@ class _ListingsState extends State<Listings> {
     }
   }
 
-  bool bidStatusCalculater(String close) {
-    var closeParsed = DateTime.parse(close);
+  Future bidStatusCalculaterAndUpdater() async {
+    var res = await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
+    var decode = jsonDecode(res.body);
+
+    // PARSING AND UPDATING DATES
     var dateTimeNow = DateTime.now();
-    if (dateTimeNow.isAfter(closeParsed)) {
-      return false;
-    } else {
-      return true;
+    for (var i = 0; i < decode.length; i++) {
+      var assetOpeningValidity = DateTime.parse(decode[i]['openingDate']
+              ['day'] +
+          ' ' +
+          decode[i]['openingDate']['time']);
+      var assetClosingValidity = DateTime.parse(decode[i]['closingDate']
+              ['day'] +
+          ' ' +
+          decode[i]['closingDate']['time']);
+      if (assetOpeningValidity.isBefore(dateTimeNow) &&
+          assetClosingValidity.isAfter(dateTimeNow)) {
+        var statusRes = await http.patch(
+            Uri.parse('http://localhost:8000/api/patch-status'),
+            headers: <String, String>{'Content-Type': 'application/json'},
+            body: jsonEncode(<String, dynamic>{
+              'assetName': decode[i]['name'],
+              'status': true,
+            }));
+        print(statusRes.statusCode);
+      }
     }
   }
 
   @override
   void initState() {
+    bidStatusCalculaterAndUpdater();
     getAssets();
     checkStatus();
     super.initState();
@@ -70,7 +90,7 @@ class _ListingsState extends State<Listings> {
           flexibleSpace: Center(
             child: GestureDetector(
               onTap: () {
-                getAssets();
+                bidStatusCalculaterAndUpdater();
               },
               child: Text(
                 "KeiBai",
@@ -146,7 +166,10 @@ class _ListingsState extends State<Listings> {
                           onTap: () {
                             globalStatus
                                 ? showAlertDialogBoxUser(
-                                    context, respList[index]['status'])
+                                    context,
+                                    respList[index]['status'],
+                                    respList[index]['minimumBid'],
+                                    respList[index]['name'])
                                 : showAlertDialogBoxGuest(context);
                           },
                           child: Card(
@@ -252,12 +275,51 @@ showAlertDialogBoxGuest(BuildContext context) {
       });
 }
 
-showAlertDialogBoxUser(BuildContext context, bool status) {
+showAlertDialogBoxPrice(BuildContext context) {
   Widget submit = TextButton(
       onPressed: () {
+        Navigator.pop(context);
+      },
+      child: Text("OK"));
+
+  AlertDialog alert = AlertDialog(
+    title: Text('Invalid Price'),
+    content: Text('Please enter a price atleast equal to minimum price'),
+    actions: [submit],
+  );
+
+  showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      });
+}
+
+showAlertDialogBoxUser(
+    BuildContext context, bool status, var minPrice, String assetName) {
+  TextEditingController _bidController = TextEditingController();
+  Widget submit = TextButton(
+      onPressed: () async {
         if (status) {
-          // POST A REQUEST TO PLACE BID
-          print('bid placed');
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          String user = prefs.getString('user').toString();
+          // PATCHING A REQUEST TO PLACE BID
+          if (int.parse(_bidController.text) >= minPrice) {
+            var res = await http.patch(
+                Uri.parse('http://localhost:8000/api/patch'),
+                headers: <String, String>{'Content-Type': 'application/json'},
+                body: jsonEncode(<String, dynamic>{
+                  'assetName': assetName,
+                  'bidder': user,
+                  'price': int.parse(_bidController.text)
+                }));
+            print(res.statusCode);
+            Navigator.pop(context);
+            print('bid placed');
+          } else {
+            print('bid not placed');
+            showAlertDialogBoxPrice(context);
+          }
         } else {
           Navigator.pop(context);
         }
@@ -266,8 +328,11 @@ showAlertDialogBoxUser(BuildContext context, bool status) {
 
   AlertDialog alert = AlertDialog(
     title: status ? Text('Enter your Bid') : Text('Closed'),
-    content:
-        status ? TextField() : Text('Bidding for this item is now closed.'),
+    content: status
+        ? TextField(
+            controller: _bidController,
+          )
+        : Text('Bidding for this item is now closed.'),
     actions: [submit],
   );
 
