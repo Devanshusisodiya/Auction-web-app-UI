@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:auction_ui3/views/listings.dart';
 import 'package:auction_ui3/views/login.dart';
 import 'package:auction_ui3/views/register.dart';
+import 'package:auction_ui3/views/search_results.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   // final user;
@@ -121,9 +125,26 @@ class _NavbarState extends State<Navbar> {
                   decoration: InputDecoration(hintText: 'Search...'),
                 )),
                 IconButton(
-                    onPressed: () {
-                      print(_searchText.text);
-                      _searchText.clear();
+                    onPressed: () async {
+                      List<dynamic> respList = [];
+                      var res = await http.get(Uri.parse(
+                          'http://localhost:8000/api/search/${_searchText.text}'));
+                      // var decode = jsonDecode(res.body);
+
+                      if (res.statusCode == 223) {
+                        print(res.body);
+                        // setState(() {
+                        //   respList = decode;
+                        // });
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    SearchListings(initString: res.body)));
+                        _searchText.clear();
+                      } else {
+                        showAlertDialogBox(context, _searchText);
+                      }
                     },
                     icon: Icon(
                       Icons.search,
@@ -219,4 +240,25 @@ class _NavbarState extends State<Navbar> {
       ),
     );
   }
+}
+
+showAlertDialogBox(BuildContext context, TextEditingController controller) {
+  Widget submit = ElevatedButton(
+      onPressed: () {
+        Navigator.pop(context);
+        controller.clear();
+      },
+      child: Text("OK"));
+
+  AlertDialog alert = AlertDialog(
+    title: Text('Not Found'),
+    content: Text('Sorry, there are no such assets.'),
+    actions: [submit],
+  );
+
+  showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      });
 }

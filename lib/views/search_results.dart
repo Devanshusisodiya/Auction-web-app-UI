@@ -1,83 +1,29 @@
 import 'dart:convert';
 import 'package:auction_ui3/views/home.dart';
 import 'package:auction_ui3/views/login.dart';
-import 'package:auction_ui3/views/search_results.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Listings extends StatefulWidget {
+class SearchListings extends StatefulWidget {
+  final String initString;
+  SearchListings({Key? key, required this.initString}) : super(key: key);
+
   @override
-  _ListingsState createState() => _ListingsState();
+  _SearchListingsState createState() => _SearchListingsState();
 }
 
-class _ListingsState extends State<Listings> {
+class _SearchListingsState extends State<SearchListings> {
   TextEditingController _searchText = TextEditingController();
   // NECESSARY DUMMY DATA
   List<String> testList = ['DUMMY DATA'];
   //
-  List<dynamic> respList = [];
   bool globalStatus = false;
-
-  void getAssets() {
-    Future.delayed(Duration(seconds: 2), () async {
-      var res =
-          await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
-      var decode = jsonDecode(res.body);
-      setState(() {
-        respList = decode;
-      });
-      print(respList);
-    });
-  }
-
-  Future checkStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var localStatus = prefs.getBool('status');
-    print('$localStatus');
-    if (localStatus == true) {
-      setState(() {
-        globalStatus = true;
-      });
-    }
-  }
-
-  Future bidStatusCalculaterAndUpdater() async {
-    var res = await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
-    var decode = jsonDecode(res.body);
-
-    // PARSING AND UPDATING DATES
-    var dateTimeNow = DateTime.now();
-    for (var i = 0; i < decode.length; i++) {
-      var assetOpeningValidity = DateTime.parse(decode[i]['openingDate']
-              ['day'] +
-          ' ' +
-          decode[i]['openingDate']['time']);
-      var assetClosingValidity = DateTime.parse(decode[i]['closingDate']
-              ['day'] +
-          ' ' +
-          decode[i]['closingDate']['time']);
-      if (assetOpeningValidity.isBefore(dateTimeNow) &&
-          assetClosingValidity.isAfter(dateTimeNow)) {
-        if (decode[i]['status'] == false) {
-          var statusRes = await http.patch(
-              Uri.parse('http://localhost:8000/api/patch-status'),
-              headers: <String, String>{'Content-Type': 'application/json'},
-              body: jsonEncode(<String, dynamic>{
-                'assetName': decode[i]['name'],
-                'status': true,
-              }));
-          print(statusRes.statusCode);
-        }
-      }
-    }
-  }
+  var initList;
 
   @override
   void initState() {
-    bidStatusCalculaterAndUpdater();
-    getAssets();
-    checkStatus();
+    initList = jsonDecode(widget.initString);
     super.initState();
   }
 
@@ -121,20 +67,9 @@ class _ListingsState extends State<Listings> {
                         decoration: InputDecoration(hintText: 'Search...'),
                       )),
                       IconButton(
-                          onPressed: () async {
-                            var res = await http.get(Uri.parse(
-                                'http://localhost:8000/api/search/${_searchText.text}'));
-                            if (res.statusCode == 223) {
-                              print(res.body);
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => SearchListings(
-                                          initString: res.body)));
-                              _searchText.clear();
-                            } else {
-                              showAlertDialogBoxSearch(context, _searchText);
-                            }
+                          onPressed: () {
+                            print(_searchText.text);
+                            _searchText.clear();
                           },
                           icon: Icon(
                             Icons.search,
@@ -164,22 +99,23 @@ class _ListingsState extends State<Listings> {
               ],
             ),
           ),
+
           Expanded(
             child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: respList.isEmpty ? testList.length : respList.length,
+                itemCount: initList.isEmpty ? testList.length : initList.length,
                 itemBuilder: (context, index) {
                   // ASSET CARD
-                  return (respList.isEmpty)
+                  return (initList.isEmpty)
                       ? Center(child: CircularProgressIndicator())
                       : GestureDetector(
                           onTap: () {
                             globalStatus
                                 ? showAlertDialogBoxUser(
                                     context,
-                                    respList[index]['status'],
-                                    respList[index]['minimumBid'],
-                                    respList[index]['name'])
+                                    initList[index]['status'],
+                                    initList[index]['minimumBid'],
+                                    initList[index]['name'])
                                 : showAlertDialogBoxGuest(context);
                           },
                           child: Padding(
@@ -193,7 +129,7 @@ class _ListingsState extends State<Listings> {
                                     width: MediaQuery.of(context).size.width,
                                     child: Center(
                                         child: Text(
-                                      respList[index]['name'],
+                                      initList[index]['name'],
                                       style: TextStyle(fontSize: 25),
                                     )),
                                   ),
@@ -204,7 +140,7 @@ class _ListingsState extends State<Listings> {
                                     child: Center(
                                         child: Text(
                                             'Minimum Bid Price - ' +
-                                                respList[index]['minimumBid']
+                                                initList[index]['minimumBid']
                                                     .toString(),
                                             style: TextStyle(
                                                 fontSize: 20,
@@ -223,10 +159,10 @@ class _ListingsState extends State<Listings> {
                                             Text('Opening Date',
                                                 style: TextStyle(fontSize: 20)),
                                             Text(
-                                                respList[index]['openingDate']
+                                                initList[index]['openingDate']
                                                         ['day'] +
                                                     ' ' +
-                                                    respList[index]
+                                                    initList[index]
                                                         ['openingDate']['time'],
                                                 style: TextStyle(
                                                     fontSize: 20,
@@ -241,10 +177,10 @@ class _ListingsState extends State<Listings> {
                                             Text('Closing Date',
                                                 style: TextStyle(fontSize: 20)),
                                             Text(
-                                                respList[index]['closingDate']
+                                                initList[index]['closingDate']
                                                         ['day'] +
                                                     ' ' +
-                                                    respList[index]
+                                                    initList[index]
                                                         ['closingDate']['time'],
                                                 style: TextStyle(
                                                     fontSize: 20,
@@ -258,7 +194,7 @@ class _ListingsState extends State<Listings> {
                                   SizedBox(
                                     height: 30,
                                     width: MediaQuery.of(context).size.width,
-                                    child: respList[index]['status']
+                                    child: initList[index]['status']
                                         ? Center(
                                             child: Text('Bidding Open',
                                                 style: TextStyle(fontSize: 20)))
@@ -369,28 +305,6 @@ showAlertDialogBoxUser(
             controller: _bidController,
           )
         : Text('Bidding for this item is now closed.'),
-    actions: [submit],
-  );
-
-  showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      });
-}
-
-showAlertDialogBoxSearch(
-    BuildContext context, TextEditingController controller) {
-  Widget submit = ElevatedButton(
-      onPressed: () {
-        Navigator.pop(context);
-        controller.clear();
-      },
-      child: Text("OK"));
-
-  AlertDialog alert = AlertDialog(
-    title: Text('Not Found'),
-    content: Text('Sorry, there are no such assets.'),
     actions: [submit],
   );
 
