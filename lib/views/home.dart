@@ -17,14 +17,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool globalStatus = false;
-  List<dynamic> placed = [
-    'placed',
-    'placed',
-    'placed',
-    'placed',
-    'placed',
-  ];
-  List<dynamic> won = ['won', 'won', 'won'];
+  List<dynamic> placed = [];
+  List<dynamic> won = [];
+  List<dynamic> subList = [];
 
   Future checkStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -37,8 +32,31 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  getBidResults() {
+    Future.delayed(Duration(seconds: 3), () async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var user = prefs.getString('user').toString();
+      var res1 =
+          await http.get(Uri.parse('http://localhost:8000/api/get-bids/$user'));
+      var res2 = await http.get(Uri.parse('http://localhost:8000/api/results'));
+      var decode1 = jsonDecode(res1.body);
+      var decode2 = jsonDecode(res2.body);
+
+      for (var i in decode2) {
+        if (i['winner'] == user) {
+          subList.add(i);
+        }
+        setState(() {
+          placed = decode1['result'];
+          won = subList;
+        });
+      }
+    });
+  }
+
   @override
   void initState() {
+    getBidResults();
     checkStatus();
     super.initState();
   }
@@ -74,45 +92,59 @@ class _HomePageState extends State<HomePage> {
                 status: globalStatus,
               ),
               Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      'Bids Placed',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 50),
-                    ),
-                    Text('Bids Won',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 50)),
-                  ],
-                ),
-              ),
+                  padding: const EdgeInsets.all(10.0),
+                  child: globalStatus
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Text(
+                              'Bids Placed',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 50),
+                            ),
+                            Text('Bids Won',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 50)),
+                          ],
+                        )
+                      : Container()),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width / 3,
-                          child: ListView.builder(
-                              itemCount: placed.length,
-                              itemBuilder: (context, index) {
-                                return Card(child: Text(placed[index]));
-                              }),
-                        ),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width / 3,
-                          child: ListView.builder(
-                              itemCount: won.length,
-                              itemBuilder: (context, index) {
-                                return Card(child: Text(won[index]));
-                              }),
-                        ),
-                      ]),
-                ),
+                    padding: const EdgeInsets.all(20),
+                    child: globalStatus
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                                SizedBox(
+                                  width: MediaQuery.of(context).size.width / 3,
+                                  child: placed.isEmpty
+                                      ? LinearProgressIndicator()
+                                      : ListView.builder(
+                                          itemCount: placed.length,
+                                          itemBuilder: (context, index) {
+                                            return Card(
+                                                child: Text(placed[index]
+                                                    ['assetName']));
+                                          }),
+                                ),
+                                SizedBox(
+                                  width: MediaQuery.of(context).size.width / 3,
+                                  child: won.isEmpty
+                                      ? LinearProgressIndicator()
+                                      : ListView.builder(
+                                          itemCount: won.length,
+                                          itemBuilder: (context, index) {
+                                            return Card(
+                                                child:
+                                                    Text(won[index]['name']));
+                                          }),
+                                ),
+                              ])
+                        : Text(
+                            'SIGMA',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 80),
+                          )),
               ),
               // FOOTER
               Container(
