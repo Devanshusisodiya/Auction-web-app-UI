@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:auction_ui3/views/listings.dart';
 import 'package:auction_ui3/views/login.dart';
 import 'package:auction_ui3/views/register.dart';
@@ -18,6 +17,14 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool globalStatus = false;
+  List<dynamic> placed = [
+    'placed',
+    'placed',
+    'placed',
+    'placed',
+    'placed',
+  ];
+  List<dynamic> won = ['won', 'won', 'won'];
 
   Future checkStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -66,12 +73,45 @@ class _HomePageState extends State<HomePage> {
               Navbar(
                 status: globalStatus,
               ),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(
+                      'Bids Placed',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 50),
+                    ),
+                    Text('Bids Won',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 50)),
+                  ],
+                ),
+              ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: Text('Just one word,\nto describe us.\nSigma',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 80)),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width / 3,
+                          child: ListView.builder(
+                              itemCount: placed.length,
+                              itemBuilder: (context, index) {
+                                return Card(child: Text(placed[index]));
+                              }),
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width / 3,
+                          child: ListView.builder(
+                              itemCount: won.length,
+                              itemBuilder: (context, index) {
+                                return Card(child: Text(won[index]));
+                              }),
+                        ),
+                      ]),
                 ),
               ),
               // FOOTER
@@ -126,16 +166,10 @@ class _NavbarState extends State<Navbar> {
                 )),
                 IconButton(
                     onPressed: () async {
-                      List<dynamic> respList = [];
                       var res = await http.get(Uri.parse(
                           'http://localhost:8000/api/search/${_searchText.text}'));
-                      // var decode = jsonDecode(res.body);
-
                       if (res.statusCode == 223) {
                         print(res.body);
-                        // setState(() {
-                        //   respList = decode;
-                        // });
                         Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -143,7 +177,7 @@ class _NavbarState extends State<Navbar> {
                                     SearchListings(initString: res.body)));
                         _searchText.clear();
                       } else {
-                        showAlertDialogBox(context, _searchText);
+                        showAlertDialogBoxSearch(context, _searchText);
                       }
                     },
                     icon: Icon(
@@ -242,7 +276,8 @@ class _NavbarState extends State<Navbar> {
   }
 }
 
-showAlertDialogBox(BuildContext context, TextEditingController controller) {
+showAlertDialogBoxSearch(
+    BuildContext context, TextEditingController controller) {
   Widget submit = ElevatedButton(
       onPressed: () {
         Navigator.pop(context);
