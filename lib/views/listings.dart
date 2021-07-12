@@ -348,7 +348,7 @@ showAlertDialogBoxUser(
                 headers: <String, String>{'Content-Type': 'application/json'},
                 body: jsonEncode(<String, dynamic>{
                   'assetName': assetName,
-                  'bidder': user,
+                  'name': user,
                   'price': int.parse(_bidController.text)
                 }));
             print(res.statusCode);
