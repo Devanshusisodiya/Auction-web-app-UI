@@ -1,14 +1,15 @@
-import 'dart:convert';
+import 'package:auction_ui3/views/bids.dart';
 import 'package:auction_ui3/views/listings.dart';
 import 'package:auction_ui3/views/login.dart';
 import 'package:auction_ui3/views/register.dart';
 import 'package:auction_ui3/views/search_results.dart';
 import 'package:flutter/material.dart';
+// ignore: import_of_legacy_library_into_null_safe
+import 'package:flutter_particles/particles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
-  // final user;
   const HomePage({Key? key}) : super(key: key);
 
   @override
@@ -17,9 +18,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool globalStatus = false;
-  List<dynamic> placed = [];
-  List<dynamic> won = [];
-  List<dynamic> subList = [];
 
   Future checkStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -32,32 +30,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  getBidResults() {
-    Future.delayed(Duration(seconds: 3), () async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      var user = prefs.getString('user').toString();
-      var res1 = await http.get(Uri.parse(
-          'https://auction-server2.herokuapp.com/api/get-bids/$user'));
-      var res2 = await http
-          .get(Uri.parse('https://auction-server2.herokuapp.com/api/results'));
-      var decode1 = jsonDecode(res1.body);
-      var decode2 = jsonDecode(res2.body);
-
-      for (var i in decode2) {
-        if (i['winner'] == user) {
-          subList.add(i);
-        }
-        setState(() {
-          placed = decode1['result'];
-          won = subList;
-        });
-      }
-    });
-  }
-
   @override
   void initState() {
-    getBidResults();
     checkStatus();
     super.initState();
   }
@@ -92,60 +66,23 @@ class _HomePageState extends State<HomePage> {
               Navbar(
                 status: globalStatus,
               ),
-              Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: globalStatus
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Text(
-                              'Bids Placed',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 50),
-                            ),
-                            Text('Bids Won',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 50)),
-                          ],
-                        )
-                      : Container()),
               Expanded(
                 child: Padding(
                     padding: const EdgeInsets.all(20),
-                    child: globalStatus
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                                SizedBox(
-                                  width: MediaQuery.of(context).size.width / 3,
-                                  child: placed.isEmpty
-                                      ? LinearProgressIndicator()
-                                      : ListView.builder(
-                                          itemCount: placed.length,
-                                          itemBuilder: (context, index) {
-                                            return Card(
-                                                child: Text(placed[index]
-                                                    ['assetName']));
-                                          }),
-                                ),
-                                SizedBox(
-                                  width: MediaQuery.of(context).size.width / 3,
-                                  child: won.isEmpty
-                                      ? LinearProgressIndicator()
-                                      : ListView.builder(
-                                          itemCount: won.length,
-                                          itemBuilder: (context, index) {
-                                            return Card(
-                                                child:
-                                                    Text(won[index]['name']));
-                                          }),
-                                ),
-                              ])
-                        : Text(
-                            'SIGMA',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 80),
-                          )),
+                    child: Stack(children: [
+                      SizedBox(
+                          width: MediaQuery.of(context).size.width,
+                          child: Opacity(
+                              opacity: 0.45,
+                              child: Particles(100, Colors.black))),
+                      Center(
+                        child: Text(
+                          'Let the Auctions\n        BEGIN.',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 80),
+                        ),
+                      ),
+                    ])),
               ),
               // FOOTER
               Container(
@@ -223,6 +160,20 @@ class _NavbarState extends State<Navbar> {
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => BidPage()));
+                            print('pressed bids');
+                          },
+                          child: Text('Bids',
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 20))),
+                    ),
                     Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: TextButton(
