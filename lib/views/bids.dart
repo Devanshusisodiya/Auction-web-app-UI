@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:auction_ui3/utils/api.dart';
 import 'package:auction_ui3/views/home.dart';
 import 'package:auction_ui3/views/listings.dart';
 import 'package:auction_ui3/views/search_results.dart';
@@ -24,10 +25,8 @@ class _BidPageState extends State<BidPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       var user = prefs.getString('user').toString();
       userGlobal = user;
-      var res1 = await http.get(Uri.parse(
-          'https://auction-server2.herokuapp.com/api/get-bids/$user'));
-      var res2 = await http
-          .get(Uri.parse('https://auction-server2.herokuapp.com/api/results'));
+      var res1 = await http.get(Uri.parse(APIRoutes.getBids + '$user'));
+      var res2 = await http.get(Uri.parse(APIRoutes.results));
       var decode1 = jsonDecode(res1.body);
       var decode2 = jsonDecode(res2.body);
 
@@ -217,8 +216,8 @@ class _NavbarState extends State<Navbar> {
                 )),
                 IconButton(
                     onPressed: () async {
-                      var res = await http.get(Uri.parse(
-                          'https://auction-server2.herokuapp.com/api/search/${_searchText.text}'));
+                      var res = await http.get(
+                          Uri.parse(APIRoutes.search + '${_searchText.text}'));
                       if (res.statusCode == 223) {
                         print(res.body);
                         Navigator.push(

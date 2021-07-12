@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:auction_ui3/utils/api.dart';
 import 'package:auction_ui3/views/home.dart';
 import 'package:auction_ui3/views/login.dart';
 import 'package:auction_ui3/views/search_results.dart';
@@ -21,8 +22,7 @@ class _ListingsState extends State<Listings> {
 
   void getAssets() {
     Future.delayed(Duration(seconds: 2), () async {
-      var res = await http.get(
-          Uri.parse('https://auction-server2.herokuapp.com/api/get-assets'));
+      var res = await http.get(Uri.parse(APIRoutes.getAssets));
       var decode = jsonDecode(res.body);
       setState(() {
         respList = decode;
@@ -43,8 +43,7 @@ class _ListingsState extends State<Listings> {
   }
 
   Future bidStatusCalculaterAndUpdater() async {
-    var res = await http
-        .get(Uri.parse('https://auction-server2.herokuapp.com/api/get-assets'));
+    var res = await http.get(Uri.parse(APIRoutes.getAssets));
     var decode = jsonDecode(res.body);
 
     // PARSING AND UPDATING DATES
@@ -61,9 +60,7 @@ class _ListingsState extends State<Listings> {
       if (assetOpeningValidity.isBefore(dateTimeNow) &&
           assetClosingValidity.isAfter(dateTimeNow)) {
         if (decode[i]['status'] == false) {
-          var statusRes = await http.patch(
-              Uri.parse(
-                  'https://auction-server2.herokuapp.com/api/patch-status'),
+          var statusRes = await http.patch(Uri.parse(APIRoutes.patchStatus),
               headers: <String, String>{'Content-Type': 'application/json'},
               body: jsonEncode(<String, dynamic>{
                 'assetName': decode[i]['name'],
@@ -125,7 +122,7 @@ class _ListingsState extends State<Listings> {
                       IconButton(
                           onPressed: () async {
                             var res = await http.get(Uri.parse(
-                                'https://auction-server2.herokuapp.com/api/search/${_searchText.text}'));
+                                APIRoutes.search + '${_searchText.text}'));
                             if (res.statusCode == 223) {
                               print(res.body);
                               Navigator.push(
@@ -343,8 +340,7 @@ showAlertDialogBoxUser(
           String user = prefs.getString('user').toString();
           // PATCHING A REQUEST TO PLACE BID
           if (int.parse(_bidController.text) >= minPrice) {
-            var res = await http.patch(
-                Uri.parse('https://auction-server2.herokuapp.com/api/patch'),
+            var res = await http.patch(Uri.parse(APIRoutes.patch),
                 headers: <String, String>{'Content-Type': 'application/json'},
                 body: jsonEncode(<String, dynamic>{
                   'assetName': assetName,

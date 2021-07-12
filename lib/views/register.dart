@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:auction_ui3/utils/api.dart';
 import 'package:auction_ui3/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -67,9 +68,7 @@ class _RegisterState extends State<Register> {
               padding: const EdgeInsets.all(25),
               child: ElevatedButton(
                   onPressed: () async {
-                    var res = await http.post(
-                        Uri.parse(
-                            'https://auction-server2.herokuapp.com/api/reg/user'),
+                    var res = await http.post(Uri.parse(APIRoutes.register),
                         headers: <String, String>{
                           'Content-Type': 'application/json'
                         },

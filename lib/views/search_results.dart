@@ -4,6 +4,7 @@ import 'package:auction_ui3/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:auction_ui3/utils/api.dart';
 
 class SearchListings extends StatefulWidget {
   final String initString;
@@ -277,8 +278,7 @@ showAlertDialogBoxUser(
           String user = prefs.getString('user').toString();
           // PATCHING A REQUEST TO PLACE BID
           if (int.parse(_bidController.text) >= minPrice) {
-            var res = await http.patch(
-                Uri.parse('https://auction-server2.herokuapp.com/api/patch'),
+            var res = await http.patch(Uri.parse(APIRoutes.patch),
                 headers: <String, String>{'Content-Type': 'application/json'},
                 body: jsonEncode(<String, dynamic>{
                   'assetName': assetName,

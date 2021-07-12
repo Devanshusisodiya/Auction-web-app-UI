@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:auction_ui3/utils/api.dart';
 import 'package:auction_ui3/views/home.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -16,8 +17,7 @@ class _LoginState extends State<Login> {
   TextEditingController _password = TextEditingController();
 
   Future loginRequest(String username, String password) async {
-    var res = await http.post(
-        Uri.parse('https://auction-server2.herokuapp.com/api/login'),
+    var res = await http.post(Uri.parse(APIRoutes.login),
         headers: <String, String>{'Content-Type': 'application/json'},
         body: jsonEncode(<String, String>{
           'username': _username.text,

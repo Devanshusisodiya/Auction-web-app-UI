@@ -1,3 +1,4 @@
+import 'package:auction_ui3/utils/api.dart';
 import 'package:auction_ui3/views/bids.dart';
 import 'package:auction_ui3/views/listings.dart';
 import 'package:auction_ui3/views/login.dart';
@@ -136,8 +137,8 @@ class _NavbarState extends State<Navbar> {
                 )),
                 IconButton(
                     onPressed: () async {
-                      var res = await http.get(Uri.parse(
-                          'https://auction-server2.herokuapp.com/api/search/${_searchText.text}'));
+                      var res = await http.get(
+                          Uri.parse(APIRoutes.search + '${_searchText.text}'));
                       if (res.statusCode == 223) {
                         print(res.body);
                         Navigator.push(
