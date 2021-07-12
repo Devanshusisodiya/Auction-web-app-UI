@@ -36,9 +36,10 @@ class _HomePageState extends State<HomePage> {
     Future.delayed(Duration(seconds: 3), () async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       var user = prefs.getString('user').toString();
-      var res1 =
-          await http.get(Uri.parse('http://localhost:8000/api/get-bids/$user'));
-      var res2 = await http.get(Uri.parse('http://localhost:8000/api/results'));
+      var res1 = await http.get(Uri.parse(
+          'https://auction-server2.herokuapp.com/api/get-bids/$user'));
+      var res2 = await http
+          .get(Uri.parse('https://auction-server2.herokuapp.com/api/results'));
       var decode1 = jsonDecode(res1.body);
       var decode2 = jsonDecode(res2.body);
 
@@ -199,7 +200,7 @@ class _NavbarState extends State<Navbar> {
                 IconButton(
                     onPressed: () async {
                       var res = await http.get(Uri.parse(
-                          'http://localhost:8000/api/search/${_searchText.text}'));
+                          'https://auction-server2.herokuapp.com/api/search/${_searchText.text}'));
                       if (res.statusCode == 223) {
                         print(res.body);
                         Navigator.push(

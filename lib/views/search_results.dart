@@ -278,7 +278,7 @@ showAlertDialogBoxUser(
           // PATCHING A REQUEST TO PLACE BID
           if (int.parse(_bidController.text) >= minPrice) {
             var res = await http.patch(
-                Uri.parse('http://localhost:8000/api/patch'),
+                Uri.parse('https://auction-server2.herokuapp.com/api/patch'),
                 headers: <String, String>{'Content-Type': 'application/json'},
                 body: jsonEncode(<String, dynamic>{
                   'assetName': assetName,

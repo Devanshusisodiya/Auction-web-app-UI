@@ -21,8 +21,8 @@ class _ListingsState extends State<Listings> {
 
   void getAssets() {
     Future.delayed(Duration(seconds: 2), () async {
-      var res =
-          await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
+      var res = await http.get(
+          Uri.parse('https://auction-server2.herokuapp.com/api/get-assets'));
       var decode = jsonDecode(res.body);
       setState(() {
         respList = decode;
@@ -43,7 +43,8 @@ class _ListingsState extends State<Listings> {
   }
 
   Future bidStatusCalculaterAndUpdater() async {
-    var res = await http.get(Uri.parse('http://localhost:8000/api/get-assets'));
+    var res = await http
+        .get(Uri.parse('https://auction-server2.herokuapp.com/api/get-assets'));
     var decode = jsonDecode(res.body);
 
     // PARSING AND UPDATING DATES
@@ -61,7 +62,8 @@ class _ListingsState extends State<Listings> {
           assetClosingValidity.isAfter(dateTimeNow)) {
         if (decode[i]['status'] == false) {
           var statusRes = await http.patch(
-              Uri.parse('http://localhost:8000/api/patch-status'),
+              Uri.parse(
+                  'https://auction-server2.herokuapp.com/api/patch-status'),
               headers: <String, String>{'Content-Type': 'application/json'},
               body: jsonEncode(<String, dynamic>{
                 'assetName': decode[i]['name'],
@@ -123,7 +125,7 @@ class _ListingsState extends State<Listings> {
                       IconButton(
                           onPressed: () async {
                             var res = await http.get(Uri.parse(
-                                'http://localhost:8000/api/search/${_searchText.text}'));
+                                'https://auction-server2.herokuapp.com/api/search/${_searchText.text}'));
                             if (res.statusCode == 223) {
                               print(res.body);
                               Navigator.push(
@@ -342,7 +344,7 @@ showAlertDialogBoxUser(
           // PATCHING A REQUEST TO PLACE BID
           if (int.parse(_bidController.text) >= minPrice) {
             var res = await http.patch(
-                Uri.parse('http://localhost:8000/api/patch'),
+                Uri.parse('https://auction-server2.herokuapp.com/api/patch'),
                 headers: <String, String>{'Content-Type': 'application/json'},
                 body: jsonEncode(<String, dynamic>{
                   'assetName': assetName,

@@ -68,7 +68,8 @@ class _RegisterState extends State<Register> {
               child: ElevatedButton(
                   onPressed: () async {
                     var res = await http.post(
-                        Uri.parse('http://localhost:8000/api/reg/user'),
+                        Uri.parse(
+                            'https://auction-server2.herokuapp.com/api/reg/user'),
                         headers: <String, String>{
                           'Content-Type': 'application/json'
                         },

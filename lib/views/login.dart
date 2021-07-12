@@ -16,7 +16,8 @@ class _LoginState extends State<Login> {
   TextEditingController _password = TextEditingController();
 
   Future loginRequest(String username, String password) async {
-    var res = await http.post(Uri.parse('http://localhost:8000/api/login'),
+    var res = await http.post(
+        Uri.parse('https://auction-server2.herokuapp.com/api/login'),
         headers: <String, String>{'Content-Type': 'application/json'},
         body: jsonEncode(<String, String>{
           'username': _username.text,
